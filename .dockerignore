@@ -1,0 +1,5 @@
+/.vscode
+/geckodriver.log
+/venv
+/__pycache__
+/app/test.py
