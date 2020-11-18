@@ -1,10 +1,20 @@
+from os import name
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from time import sleep
 from seleniumwire import webdriver
 import os
 import platform
+import requests
 # Importing libraries
+
+
+def personId(school, apitoken):
+    url = "https://"+school+".magister.net:443/api/toestemmingen"
+    header = {"Connection": "close", "Accept": "application/json, text/plain, */*", "Authorization": "Bearer " + apitoken,
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty", "Referer": "https://"+school+".magister.net/magister/", "Accept-Encoding": "gzip, deflate", "Accept-Language": "en-US,en;q=0.9"}
+    r = requests.get(url, headers=header)
+    return r.json()["items"][0]["persoonId"]
 
 
 def getApiToken(user, passwd, school):
@@ -39,10 +49,13 @@ def getApiToken(user, passwd, school):
     elem.send_keys(Keys.RETURN)
     sleep(2)
     # Filtering out the request with the API token, and parsing the request:
-    hiturl = "https://accounts.magister.net/connect/authorize/callback?client_id=M6-zandvliet.magister.net"
+    hiturl = "https://accounts.magister.net/connect/authorize/callback?client_id=M6-" + \
+        school+".magister.net"
     for request in driver.requests:
         if request.response:
             if hiturl in request.url:
                 driver.quit()
-                return request.response.headers["location"].split("access_token=", 1)[1].split("&")[0]
-
+                accestoken = request.response.headers["location"].split("access_token=", 1)[
+                    1].split("&")[0]
+                id = personId(school, accestoken)
+                return {"apitoken": accestoken, "personID": id}
